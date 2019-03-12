@@ -9,14 +9,14 @@ from time import sleep
 operating_sys = platform.system()
 
 if len(sys.argv) > 1:
-	nas = sys.argv[1]
+	host = sys.argv[1]
 else:
 	print("Enter the address. for example sping 127.0.0.1")
 	sys.exit(1)
 
-def ping(ip):
-	ok = 0
-	nok = 0
+def ping(ip, stats):
+	#ok = 0
+	#total = 0
 
 	if operating_sys == 'Windows':
 		ping_command = ['ping', ip, '-n 1']
@@ -28,14 +28,17 @@ def ping(ip):
 	ping_output = subprocess.run(ping_command, shell=shell_needed, stdout=subprocess.PIPE)
 	success = ping_output.returncode
 
+	stats[0] += 1
+
 	if success == 0:
 		if operating_sys == 'Windows':
 			print('Host %s is alive!' % ip)
 		else:
 			out = ping_output.stdout.decode("utf-8").split()
 			time = out[13].split('=')
-			print('Host %s is alive time=%s %s!' % (ip, time[1], out[14]))
+			print('Host %s is alive time=%s %s' % (ip, time[1], out[14]))
 			os.system('play -nq -t alsa synth 0.2 sine 800')
+		stats[1] += 1
 	else:
 		if operating_sys == 'Windows':
 			print('Host %s is dead!' % ip)
@@ -43,10 +46,19 @@ def ping(ip):
 			print('Host %s is dead!' % ip)
 			os.system('play -nq -t alsa synth 0.5 sine 200')
 
+	return stats
+
+result = [0, 0]
+
 while 1:
 	try:
-		ping(nas)
+		result = ping(host, result)
 		sleep(1)
 	except (KeyboardInterrupt, SystemExit):
-		print("Bye!")
+		#print(result)
+		loss = result[0] - result[1]
+		per_loss = loss * 100 / result[0]
+		print("--- %s ping statistics ---" % host)
+		print("{} packets transmitted, {} received,  packet loss {}%".format(result[0], result[1], round(per_loss)))
+		#print("Bye!")
 		break
