@@ -6,14 +6,6 @@ import os
 import sys
 from time import sleep
 
-operating_sys = platform.system()
-
-if len(sys.argv) > 1:
-	host = sys.argv[1]
-else:
-	print("Enter the address. for example sping 127.0.0.1")
-	sys.exit(1)
-
 def read_out(out):
 	string = out.decode("utf-8").split()
 
@@ -26,10 +18,9 @@ def read_out(out):
 
 	duration = duration.split('=')
 
-	return [duration[1], ei]
+	return [float(duration[1]), ei]
 
 def ping(ip, stats):
-
 	if operating_sys == 'Windows':
 		ping_command = ['ping', ip, '-n 1']
 		shell_needed = True
@@ -50,6 +41,7 @@ def ping(ip, stats):
 			print('Host %s is alive time=%s %s' % (ip, time[0], time[1]))
 			os.system('play -nq -t alsa synth 0.2 sine 800')
 		stats[1] += 1
+		stats[2].append(time[0])
 	else:
 		if operating_sys == 'Windows':
 			print('Host %s is dead!' % ip)
@@ -59,7 +51,17 @@ def ping(ip, stats):
 
 	return stats
 
-result = [0, 0]
+def avg(lst):
+	return round((sum(lst) / len(lst)), 3)
+
+if len(sys.argv) > 1:
+	host = sys.argv[1]
+else:
+	print("Enter the address. for example sping 127.0.0.1")
+	sys.exit(1)
+
+operating_sys = platform.system()
+result = [0, 0, []]
 
 while 1:
 	try:
@@ -70,4 +72,5 @@ while 1:
 		per_loss = loss * 100 / result[0]
 		print("--- %s ping statistics ---" % host)
 		print("{} packets transmitted, {} received,  packet loss {}%".format(result[0], result[1], round(per_loss)))
+		print("rtt min/avg/max = {}/{}/{} ms".format(min(result[2]), avg(result[2]), max(result[2])))
 		break
