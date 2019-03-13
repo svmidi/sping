@@ -4,6 +4,7 @@ import subprocess
 import platform
 import os
 import sys
+import re
 from time import sleep
 
 def read_out(out):
@@ -39,7 +40,8 @@ def ping(ip, stats):
 		else:
 			time = read_out(ping_output.stdout)
 			print('Host %s is alive time=%s %s' % (ip, time[0], time[1]))
-			os.system('play -nq -t alsa synth 0.2 sine 800')
+			if beep == 1 or beep == 0:
+				os.system('play -nq -t alsa synth 0.2 sine 800')
 		stats[1] += 1
 		stats[2].append(time[0])
 	else:
@@ -47,17 +49,42 @@ def ping(ip, stats):
 			print('Host %s is dead!' % ip)
 		else:
 			print('Host %s is dead!' % ip)
-			os.system('play -nq -t alsa synth 0.5 sine 200')
+			if beep == 2 or beep == 0:
+				os.system('play -nq -t alsa synth 0.5 sine 200')
 
 	return stats
 
 def avg(lst):
 	return round((sum(lst) / len(lst)), 3)
 
+beep = 0
+host = ""
 if len(sys.argv) > 1:
-	host = sys.argv[1]
+
+	for opt in sys.argv:
+		if opt == "-h":
+			print("Usage: sping [-f|s] host")
+			print("	-s - sound only successful packages")
+			print("	-f - sound only failed packages")
+			print("	-v - print version")
+			print("	-h - print this message")
+			sys.exit(0)
+		elif opt == "-s":
+			beep = 1
+		elif opt == "-f":
+			beep = 2
+		elif opt == "-v":
+			print("Version: 1.0")
+			sys.exit(0)
+		elif re.match(r'^[^-=+*/\\%$#@]\w{0,}', opt) and opt != sys.argv[0]:
+			host = opt
+
 else:
-	print("Enter the address. for example sping 127.0.0.1")
+	print("Usage: sping [-f|s] host")
+	sys.exit(1)
+
+if host == "":
+	print("Usage: sping [-f|s] host")
 	sys.exit(1)
 
 operating_sys = platform.system()
@@ -72,5 +99,6 @@ while 1:
 		per_loss = loss * 100 / result[0]
 		print("--- %s ping statistics ---" % host)
 		print("{} packets transmitted, {} received,  packet loss {}%".format(result[0], result[1], round(per_loss)))
-		print("rtt min/avg/max = {}/{}/{} ms".format(min(result[2]), avg(result[2]), max(result[2])))
+		if len(result[2]) > 1:
+			print("rtt min/avg/max = {}/{}/{} ms".format(min(result[2]), avg(result[2]), max(result[2])))
 		break
