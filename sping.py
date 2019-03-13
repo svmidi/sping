@@ -14,9 +14,21 @@ else:
 	print("Enter the address. for example sping 127.0.0.1")
 	sys.exit(1)
 
+def read_out(out):
+	string = out.decode("utf-8").split()
+
+	if len(string) == 36:
+		duration = string[14]
+		ei = string[15]
+	else:
+		duration = string[13]
+		ei = string[14]
+
+	duration = duration.split('=')
+
+	return [duration[1], ei]
+
 def ping(ip, stats):
-	#ok = 0
-	#total = 0
 
 	if operating_sys == 'Windows':
 		ping_command = ['ping', ip, '-n 1']
@@ -34,9 +46,8 @@ def ping(ip, stats):
 		if operating_sys == 'Windows':
 			print('Host %s is alive!' % ip)
 		else:
-			out = ping_output.stdout.decode("utf-8").split()
-			time = out[13].split('=')
-			print('Host %s is alive time=%s %s' % (ip, time[1], out[14]))
+			time = read_out(ping_output.stdout)
+			print('Host %s is alive time=%s %s' % (ip, time[0], time[1]))
 			os.system('play -nq -t alsa synth 0.2 sine 800')
 		stats[1] += 1
 	else:
@@ -55,10 +66,8 @@ while 1:
 		result = ping(host, result)
 		sleep(1)
 	except (KeyboardInterrupt, SystemExit):
-		#print(result)
 		loss = result[0] - result[1]
 		per_loss = loss * 100 / result[0]
 		print("--- %s ping statistics ---" % host)
 		print("{} packets transmitted, {} received,  packet loss {}%".format(result[0], result[1], round(per_loss)))
-		#print("Bye!")
 		break
