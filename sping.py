@@ -57,17 +57,20 @@ def ping(ip, stats):
 def avg(lst):
 	return round((sum(lst) / len(lst)), 3)
 
+def print_help():
+	print("Usage: sping [-f|s] host")
+	print("	-s - sound only successful packages")
+	print("	-f - sound only failed packages")
+	print("	-v - print version")
+	print("	-h - print this message")
+
 beep = 0
 host = ""
 if len(sys.argv) > 1:
 
 	for opt in sys.argv:
 		if opt == "-h":
-			print("Usage: sping [-f|s] host")
-			print("	-s - sound only successful packages")
-			print("	-f - sound only failed packages")
-			print("	-v - print version")
-			print("	-h - print this message")
+			print_help()
 			sys.exit(0)
 		elif opt == "-s":
 			beep = 1
@@ -80,11 +83,11 @@ if len(sys.argv) > 1:
 			host = opt
 
 else:
-	print("Usage: sping [-f|s] host")
+	print_help()
 	sys.exit(1)
 
 if host == "":
-	print("Usage: sping [-f|s] host")
+	print_help()
 	sys.exit(1)
 
 operating_sys = platform.system()
